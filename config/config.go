@@ -1,74 +1,33 @@
 package config
 
 import (
-	"os"
+	"github.com/urfave/cli/v2"
 
-	"gopkg.in/yaml.v2"
-
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/wong1998/chain-sign/flags"
 )
 
-type Server struct {
-	Port string `yaml:"port"`
-}
-
-type Node struct {
-	RpcUrl       string `yaml:"rpc_url"`
-	RpcUser      string `yaml:"rpc_user"`
-	RpcPass      string `yaml:"rpc_pass"`
-	DataApiUrl   string `yaml:"data_api_url"`
-	DataApiKey   string `yaml:"data_api_key"`
-	DataApiToken string `yaml:"data_api_token"`
-	TimeOut      uint64 `yaml:"time_out"`
-}
-
-type WalletNode struct {
-	Eth     Node `yaml:"eth"`
-	Arbi    Node `yaml:"arbi"`
-	Op      Node `yaml:"op"`
-	Zksync  Node `yaml:"zksync"`
-	Bsc     Node `yaml:"bsc"`
-	Heco    Node `yaml:"heco"`
-	Avax    Node `yaml:"avax"`
-	Polygon Node `yaml:"polygon"`
-	Tron    Node `yaml:"tron"`
-	Sol     Node `yaml:"solana"`
-	Cosmos  Node `yaml:"cosmos"`
-	Aptos   Node `yaml:"aptos"`
-	Mantle  Node `yaml:"mantle"`
-	Scroll  Node `yaml:"scroll"`
-	Base    Node `yaml:"base"`
-	Linea   Node `yaml:"linea"`
-	Sui     Node `yaml:"sui"`
-	Ton     Node `yaml:"ton"`
-	Icp     Node `yaml:"icp"`
+type ServerConfig struct {
+	Host string
+	Port int
 }
 
 type Config struct {
-	Server     Server     `yaml:"server"`
-	WalletNode WalletNode `yaml:"wallet_node"`
-	NetWork    string     `yaml:"network"`
-	Chains     []string   `yaml:"chains"`
+	LevelDbPath     string
+	RpcServer       ServerConfig
+	CredentialsFile string
+	KeyName         string
+	HsmEnable       bool
 }
 
-func New(path string) (*Config, error) {
-	var config = new(Config)
-	h := log.NewTerminalHandler(os.Stdout, true)
-	log.SetDefault(log.NewLogger(h))
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		log.Error("read config file error", "err", err)
-		return nil, err
+func NewConfig(ctx *cli.Context) Config {
+	return Config{
+		LevelDbPath:     ctx.String(flags.LevelDbPathFlag.Name),
+		CredentialsFile: ctx.String(flags.CredentialsFileFlag.Name),
+		KeyName:         ctx.String(flags.KeyNameFlag.Name),
+		HsmEnable:       ctx.Bool(flags.HsmEnable.Name),
+		RpcServer: ServerConfig{
+			Host: ctx.String(flags.RpcHostFlag.Name),
+			Port: ctx.Int(flags.RpcPortFlag.Name),
+		},
 	}
-
-	err = yaml.Unmarshal(data, config)
-	if err != nil {
-		log.Error("unmarshal config file error", "err", err)
-		return nil, err
-	}
-	return config, nil
 }
-
-const UnsupportedChain = "Unsupport chain"
-const UnsupportedOperation = UnsupportedChain
